@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Windows;
@@ -8,6 +9,8 @@ using System.Windows.Interop;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
 using OCRTester.Model;
+using OCRTester.Model.Settings;
+using Tesseract;
 
 namespace OCRTester.ViewModel
 {
@@ -24,35 +27,70 @@ namespace OCRTester.ViewModel
         public int X
         {
             get => _x;
-            set => Set(ref _x, value);
+            set
+            {
+                if (Set(ref _x, value))
+                {
+                    _dataService.Config.SaveConfigData(
+                        new ConfigData(ConfigData.X, value.ToString(), false));
+                }
+            }
         }
 
         private int _y;
         public int Y
         {
             get => _y;
-            set => Set(ref _y, value);
+            set
+            {
+                if (Set(ref _y, value))
+                {
+                    _dataService.Config.SaveConfigData(
+                        new ConfigData(ConfigData.Y, value.ToString(), false));
+                }
+            }
         }
 
         private int _width;
         public int Width
         {
             get => _width;
-            set => Set(ref _width, value);
+            set
+            {
+                if (Set(ref _width, value))
+                {
+                    _dataService.Config.SaveConfigData(
+                        new ConfigData(ConfigData.WIDTH, value.ToString(), false));
+                }
+            }
         }
 
         private int _height;
         public int Height
         {
             get => _height;
-            set => Set(ref _height, value);
+            set
+            {
+                if (Set(ref _height, value))
+                {
+                    _dataService.Config.SaveConfigData(
+                        new ConfigData(ConfigData.HEIGHT, value.ToString(), false));
+                }
+            }
         }
 
         private string _windowName;
         public string WindowName
         {
             get => _windowName;
-            set => Set(ref _windowName, value);
+            set
+            {
+                if (Set(ref _windowName, value))
+                {
+                    _dataService.Config.SaveConfigData(
+                        new ConfigData(ConfigData.WINDOW_NAME, value, false));
+                }
+            }
         }
 
         private string _ocrResult;
@@ -78,7 +116,6 @@ namespace OCRTester.ViewModel
                 Task.Run(() =>
                 {
                     _dataService.WinHandler.Run("capture.json", X, Y, Width, Height, WindowName);
-                    OCRResult = "Captured";
                 });
             }
         }
@@ -99,12 +136,75 @@ namespace OCRTester.ViewModel
         {
             _dataService = dataService;
             _dataService.WinHandler.OnScreenCaptured += (sender, bm) =>
-                Application.Current.Dispatcher.Invoke(() => SnapShot = ImageSourceFromBitmap(bm));
+            {
+                string ocrText = null;
 
-            Width = 320;
-            Height = 240;
+                try
+                {
+                    byte[] pixArray = null;
+
+                    using (var stream = new MemoryStream())
+                    {
+                        bm.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
+                        pixArray = stream.ToArray();
+                    }
+
+                    using (var engine = new TesseractEngine(@"./tessdata", "eng", EngineMode.Default))
+                    {
+                        if (pixArray != null)
+                        {
+                            using (var img = Pix.LoadFromMemory(pixArray))
+                            {
+                                using (var page = engine.Process(img))
+                                {
+                                    ocrText = page.GetText();
+                                }
+                            }
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    System.Windows.Forms.MessageBox.Show(e.ToString());
+                }
+
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    SnapShot = ImageSourceFromBitmap(bm);
+
+                    if (!string.IsNullOrEmpty(ocrText))
+                        OCRResult = ocrText;
+                });
+            };
+
             OCRResult = "OCR Tester";
             CaptureCommand = new RelayCommand(CaptureCommandMethod);
+
+            foreach (ConfigData cd in dataService.Config.LoadConfigData())
+            {
+                switch (cd.Name)
+                {
+                    case ConfigData.WINDOW_NAME:
+                        WindowName = cd.Value;
+                        break;
+                    case ConfigData.X:
+                        if (int.TryParse(cd.Value, out int x))
+                            X = x;
+                        break;
+                    case ConfigData.Y:
+                        if (int.TryParse(cd.Value, out int y))
+                            Y = y;
+                        break;
+                    case ConfigData.WIDTH:
+                        if (int.TryParse(cd.Value, out int width))
+                            Width = width;
+                        break;
+                    case ConfigData.HEIGHT:
+                        if (int.TryParse(cd.Value, out int height))
+                            Height = height;
+                        break;
+                }
+            }
         }
     }
 }

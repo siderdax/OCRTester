@@ -94,7 +94,7 @@ namespace OCRTester.Model.Utility
 
                     for (var i = 0; i < content.Items.Length; i++)
                     {
-                        if (string.IsNullOrEmpty(windowName) && content.Items[i].Command.Contains("FindWindow"))
+                        if (!string.IsNullOrEmpty(windowName) && content.Items[i].Command.Contains("FindWindow"))
                         {
                             content.Items[i].Name = windowName;
                         }
