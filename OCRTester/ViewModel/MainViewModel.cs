@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.ObjectModel;
 using System.Drawing;
 using System.IO;
 using System.Threading;
@@ -210,6 +211,69 @@ namespace OCRTester.ViewModel
             }
         }
 
+        private bool _useEngMode;
+        public bool UseEngMode
+        {
+            get => _useEngMode;
+            set => Set(ref _useEngMode, value);
+        }
+
+        private ObservableCollection<string> _engineModeList;
+        public ObservableCollection<string> EngineModeList
+        {
+            get => _engineModeList;
+            set => Set(ref _engineModeList, value);
+        }
+
+        private string _selectedEngineMode;
+        public string SelectedEngineMode
+        {
+            get => _selectedEngineMode;
+            set => Set(ref _selectedEngineMode, value);
+        }
+
+        private ObservableCollection<string> _captureModeList;
+        public ObservableCollection<string> CaptureModeList
+        {
+            get => _captureModeList;
+            set => Set(ref _captureModeList, value);
+        }
+
+        private string _selectedCaptureMode;
+        public string SelectedCaptureMode
+        {
+            get => _selectedCaptureMode;
+            set
+            {
+                if (Set(ref _selectedCaptureMode, value))
+                {
+                    if (value.Equals("Normal"))
+                    {
+                        UseEngMode = true;
+                    }
+                    else
+                    {
+                        UseEngMode = false;
+                        SelectedEngineMode = EngineModeList[0];
+                    }
+                }
+            }
+        }
+
+        private ObservableCollection<string> _languageList;
+        public ObservableCollection<string> LanguageList
+        {
+            get => _languageList;
+            set => Set(ref _languageList, value);
+        }
+
+        private string _selectedLanguage;
+        public string SelectedLanguage
+        {
+            get => _selectedLanguage;
+            set => Set(ref _selectedLanguage, value);
+        }
+
         private System.Windows.Media.ImageSource _snapshot;
         public System.Windows.Media.ImageSource Snapshot
         {
@@ -293,9 +357,29 @@ namespace OCRTester.ViewModel
         {
             string ocrText = null;
 
+            if (bitmap == null)
+                return string.Empty;
+
             try
             {
                 byte[] pixArray = null;
+                var engMode = EngineMode.Default;
+
+                switch (SelectedEngineMode)
+                {
+                    case "Default":
+                        engMode = EngineMode.Default;
+                        break;
+                    case "TessOnly":
+                        engMode = EngineMode.TesseractOnly;
+                        break;
+                    case "LstmOnly":
+                        engMode = EngineMode.LstmOnly;
+                        break;
+                    case "TessAndLstm":
+                        engMode = EngineMode.TesseractAndLstm;
+                        break;
+                }
 
                 using (var stream = new MemoryStream())
                 {
@@ -303,7 +387,9 @@ namespace OCRTester.ViewModel
                     pixArray = stream.ToArray();
                 }
 
-                using (var engine = new TesseractEngine(@"./tessdata", "eng", EngineMode.Default))
+                using (var engine = new TesseractEngine(
+                    SelectedCaptureMode.Equals("Normal") ? @"./tessdata" : @"./tessdata_fast",
+                    SelectedLanguage, engMode))
                 {
                     if (pixArray != null)
                     {
@@ -355,6 +441,13 @@ namespace OCRTester.ViewModel
             ThValue = 128;
             LPFValue = 255;
             HPFValue = 0;
+            EngineModeList = new ObservableCollection<string> { "Default", "TessOnly", "LstmOnly", "TessAndLstm" };
+            SelectedEngineMode = EngineModeList[0];
+            CaptureModeList = new ObservableCollection<string> { "Normal", "Fast" };
+            SelectedCaptureMode = CaptureModeList[0];
+            LanguageList = new ObservableCollection<string> { "eng", "kor" };
+            SelectedLanguage = LanguageList[0];
+            UseEngMode = true;
             CaptureCommand = new RelayCommand(CaptureCommandMethod);
             ReadTextCommand = new RelayCommand(ReadTextCommandMethod);
 

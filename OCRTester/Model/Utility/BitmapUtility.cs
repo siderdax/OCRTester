@@ -26,45 +26,57 @@ namespace OCRTester.Model.Utility
 
         public static void ConvertToGrayscale(Bitmap bitmap)
         {
-            for (int x = 0; x < bitmap.Width; x++)
+            try
             {
-                for (int y = 0; y < bitmap.Height; y++)
+                for (int x = 0; x < bitmap.Width; x++)
                 {
-                    var pixel = bitmap.GetPixel(x, y);
-                    int value = (int)Math.Round(pixel.R * 0.299 + pixel.G * 0.587 + pixel.B * 0.114);
-                    bitmap.SetPixel(x, y, Color.FromArgb(pixel.A, value, value, value));
-                }
-            };
+                    for (int y = 0; y < bitmap.Height; y++)
+                    {
+                        var pixel = bitmap.GetPixel(x, y);
+                        int value = (int)Math.Round(pixel.R * 0.299 + pixel.G * 0.587 + pixel.B * 0.114);
+                        bitmap.SetPixel(x, y, Color.FromArgb(pixel.A, value, value, value));
+                    }
+                };
+            }
+            catch { }
         }
 
         public static void SetLPF(Bitmap bitmap, byte value)
         {
-            for (int x = 0; x < bitmap.Width; x++)
+            try
             {
-                for (int y = 0; y < bitmap.Height; y++)
+                for (int x = 0; x < bitmap.Width; x++)
                 {
-                    var pixel = bitmap.GetPixel(x, y);
-                    bitmap.SetPixel(x, y, Color.FromArgb(pixel.A,
-                                                         pixel.R < value ? pixel.R : value,
-                                                         pixel.G < value ? pixel.G : value,
-                                                         pixel.B < value ? pixel.B : value));
-                }
-            };
+                    for (int y = 0; y < bitmap.Height; y++)
+                    {
+                        var pixel = bitmap.GetPixel(x, y);
+                        bitmap.SetPixel(x, y, Color.FromArgb(pixel.A,
+                                                            pixel.R < value ? pixel.R : value,
+                                                            pixel.G < value ? pixel.G : value,
+                                                            pixel.B < value ? pixel.B : value));
+                    }
+                };
+            }
+            catch { }
         }
 
         public static void SetHPF(Bitmap bitmap, byte value)
         {
-            for (int x = 0; x < bitmap.Width; x++)
+            try
             {
-                for (int y = 0; y < bitmap.Height; y++)
+                for (int x = 0; x < bitmap.Width; x++)
                 {
-                    var pixel = bitmap.GetPixel(x, y);
-                    bitmap.SetPixel(x, y, Color.FromArgb(pixel.A,
-                                                         pixel.R > value ? pixel.R : value,
-                                                         pixel.G > value ? pixel.G : value,
-                                                         pixel.B > value ? pixel.B : value));
-                }
-            };
+                    for (int y = 0; y < bitmap.Height; y++)
+                    {
+                        var pixel = bitmap.GetPixel(x, y);
+                        bitmap.SetPixel(x, y, Color.FromArgb(pixel.A,
+                                                            pixel.R > value ? pixel.R : value,
+                                                            pixel.G > value ? pixel.G : value,
+                                                            pixel.B > value ? pixel.B : value));
+                    }
+                };
+            }
+            catch { }
         }
 
         public static void SetThreshold(Bitmap bitmap, byte value)

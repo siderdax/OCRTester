@@ -7,7 +7,7 @@
         mc:Ignorable="d ignore"
         Height="450"
         Width="800"
-        MinWidth="320"
+        MinWidth="360"
         MinHeight="450"
         Title="OCR Tester"
         DataContext="{Binding Main, Source={StaticResource Locator}}">
@@ -21,12 +21,20 @@
     </Window.Resources>
 
     <DockPanel>
-        <DockPanel DockPanel.Dock="Right">
-            <TextBlock DockPanel.Dock="Top" Text="OCR Result:" FontWeight="Bold" Margin="8" />
-            <DockPanel DockPanel.Dock="Bottom" Margin="8">
+        <DockPanel DockPanel.Dock="Right" Width="324">
+            <TextBlock DockPanel.Dock="Top" Text="OCR Result:" FontWeight="Bold" Margin="8 4" />
+            <DockPanel DockPanel.Dock="Bottom" Margin="8 4 8 8">
                 <DockPanel DockPanel.Dock="Bottom">
-                    <Button DockPanel.Dock="Right" Content="Capture" Height="28" Command="{Binding CaptureCommand}" Padding="16 0" Margin="4 0 0 0" />
-                    <Button DockPanel.Dock="Bottom" Content="Read Text" Height="28" Command="{Binding ReadTextCommand}"/>
+                    <Button Content="Capture" Height="28" Command="{Binding CaptureCommand}" />
+                </DockPanel>
+                <DockPanel DockPanel.Dock="Bottom" Margin="0 0 0 4">
+                    <ComboBox DockPanel.Dock="Left" ItemsSource="{Binding CaptureModeList}" SelectedItem="{Binding SelectedCaptureMode}"
+                              VerticalContentAlignment="Center"/>
+                    <ComboBox DockPanel.Dock="Left" ItemsSource="{Binding EngineModeList}" SelectedItem="{Binding SelectedEngineMode}" Margin="4 0 0 0"
+                              VerticalContentAlignment="Center" IsEnabled="{Binding UseEngMode}"/>
+                    <ComboBox DockPanel.Dock="Left" ItemsSource="{Binding LanguageList}" SelectedItem="{Binding SelectedLanguage}" Margin="4 0 0 0"
+                              VerticalContentAlignment="Center"/>
+                    <Button Content="Read Text" Height="28" Command="{Binding ReadTextCommand}" Margin="4 0 0 0"/>
                 </DockPanel>
                 <StackPanel DockPanel.Dock="Bottom" Margin="0 0 0 8">
                     <DockPanel Margin="0 0 0 4">
@@ -73,7 +81,9 @@
                 </StackPanel>
             </DockPanel>
             <Border BorderThickness="1" BorderBrush="Gray" Margin="4 0">
-                <TextBlock Text="{Binding OCRResult}"/>
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <TextBlock Text="{Binding OCRResult}"/>
+                </ScrollViewer>
             </Border>
         </DockPanel>
         <DockPanel Background="LightGray">
