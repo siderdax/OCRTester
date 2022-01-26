@@ -90,6 +90,7 @@
     <Compile Include="Model\Settings\ConfigData.cs" />
     <Compile Include="Model\DataService.cs" />
     <Compile Include="Model\IDataService.cs" />
+    <Compile Include="Model\Utility\BitmapUtility.cs" />
     <Compile Include="Model\Utility\WindowHandleContent.cs" />
     <Compile Include="Model\Utility\WindowHandler.cs" />
     <Compile Include="ViewModel\MainViewModel.cs" />

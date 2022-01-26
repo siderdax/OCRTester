@@ -24,13 +24,16 @@
         <DockPanel DockPanel.Dock="Right">
             <TextBlock DockPanel.Dock="Top" Text="OCR Result:" FontWeight="Bold" Margin="8" />
             <DockPanel DockPanel.Dock="Bottom" Margin="8">
-                <Button DockPanel.Dock="Bottom" Content="Capture" Height="32" Command="{Binding CaptureCommand}" />
-                <StackPanel DockPanel.Dock="Bottom">
-                    <DockPanel Margin="0 0 0 8">
+                <DockPanel DockPanel.Dock="Bottom">
+                    <Button DockPanel.Dock="Right" Content="Capture" Height="28" Command="{Binding CaptureCommand}" Padding="16 0" Margin="4 0 0 0" />
+                    <Button DockPanel.Dock="Bottom" Content="Read Text" Height="28" Command="{Binding ReadTextCommand}"/>
+                </DockPanel>
+                <StackPanel DockPanel.Dock="Bottom" Margin="0 0 0 8">
+                    <DockPanel Margin="0 0 0 4">
                         <TextBlock DockPanel.Dock="Left" Text="Window name:" Width="88" TextAlignment="Right" />
                         <TextBox Text="{Binding WindowName}" Margin="8 0 0 0" />
                     </DockPanel>
-                    <StackPanel Orientation="Horizontal" Margin="0 0 0 8">
+                    <StackPanel Orientation="Horizontal" Margin="0 0 0 4">
                         <TextBlock Text="X:" Width="88" TextAlignment="Right" />
                         <TextBox Text="{Binding X}" Width="56" Margin="8 0 0 0" />
                         <TextBlock Text="Y:" Width="48" TextAlignment="Right" Margin="8 0 0 0" />
@@ -42,6 +45,31 @@
                         <TextBlock Text="Height:" Width="48" TextAlignment="Right" Margin="8 0 0 0" />
                         <TextBox Text="{Binding Height}" Width="56" Margin="8 0 0 0" />
                     </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0 0 0 8">
+                        <CheckBox Content="Grayscale" IsChecked="{Binding UseGrayscale}" VerticalAlignment="Center" Margin="8 0 0 0" />
+                        <CheckBox Content="Apply after threshold" IsChecked="{Binding UseGsAfterTh}" VerticalAlignment="Center" Margin="16 0 0 0" />
+                    </StackPanel>
+                    <StackPanel Margin="0 0 0 4">
+                        <StackPanel Orientation="Horizontal" Margin="8 0 0 4">
+                            <CheckBox Content="Use threshold" IsChecked="{Binding UseThreshold}" VerticalAlignment="Bottom"/>
+                            <TextBlock Text="{Binding ThValue}" Margin="16 0 0 0" VerticalAlignment="Bottom"/>
+                        </StackPanel>
+                        <Slider DockPanel.Dock="Bottom" Value="{Binding ThValue}" Maximum="255" Minimum="0" Interval="1" Margin="16 0 8 0" IsEnabled="{Binding UseThreshold}"/>
+                    </StackPanel>
+                    <StackPanel Margin="0 0 0 4">
+                        <StackPanel Orientation="Horizontal" Margin="8 0 0 4">
+                            <CheckBox Content="Use LPF" IsChecked="{Binding UseLPF}" VerticalAlignment="Bottom"/>
+                            <TextBlock Text="{Binding LPFValue}" Margin="16 0 0 0" VerticalAlignment="Bottom"/>
+                        </StackPanel>
+                        <Slider DockPanel.Dock="Bottom" Value="{Binding LPFValue}" Maximum="255" Minimum="0" Interval="1" Margin="16 0 8 0" IsEnabled="{Binding UseLPF}"/>
+                    </StackPanel>
+                    <StackPanel Margin="0 0 0 4">
+                        <StackPanel Orientation="Horizontal" Margin="8 0 0 4">
+                            <CheckBox Content="Use HPF" IsChecked="{Binding UseHPF}" VerticalAlignment="Bottom"/>
+                            <TextBlock Text="{Binding HPFValue}" Margin="16 0 0 0" VerticalAlignment="Bottom"/>
+                        </StackPanel>
+                        <Slider DockPanel.Dock="Bottom" Value="{Binding HPFValue}" Maximum="255" Minimum="0" Interval="1" Margin="16 0 8 0" IsEnabled="{Binding UseHPF}"/>
+                    </StackPanel>
                 </StackPanel>
             </DockPanel>
             <Border BorderThickness="1" BorderBrush="Gray" Margin="4 0">
@@ -49,7 +77,7 @@
             </Border>
         </DockPanel>
         <DockPanel Background="LightGray">
-            <Image Source="{Binding SnapShot}" RenderOptions.BitmapScalingMode="NearestNeighbor" />
+            <Image Source="{Binding Snapshot}" RenderOptions.BitmapScalingMode="NearestNeighbor" />
         </DockPanel>
     </DockPanel>
 </Window>

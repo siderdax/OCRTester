@@ -1,15 +1,14 @@
 ﻿using System;
 using System.Drawing;
 using System.IO;
-using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
-using System.Windows.Interop;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
 using OCRTester.Model;
 using OCRTester.Model.Settings;
+using OCRTester.Model.Utility;
 using Tesseract;
 
 namespace OCRTester.ViewModel
@@ -17,11 +16,9 @@ namespace OCRTester.ViewModel
 
     public class MainViewModel : ViewModelBase
     {
-        [DllImport("gdi32.dll", EntryPoint = "DeleteObject")]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        public static extern bool DeleteObject([In] IntPtr hObject);
-
         private readonly IDataService _dataService;
+        private Bitmap _originalBitmap;
+        private Bitmap _convertedBitmap;
 
         private int _x;
         public int X
@@ -100,11 +97,99 @@ namespace OCRTester.ViewModel
             set => Set(ref _ocrResult, value);
         }
 
-        private System.Windows.Media.ImageSource _snapShot;
-        public System.Windows.Media.ImageSource SnapShot
+        private bool _useGrayscale;
+        public bool UseGrayscale
         {
-            get => _snapShot;
-            set => Set(ref _snapShot, value);
+            get => _useGrayscale;
+            set
+            {
+                if (Set(ref _useGrayscale, value))
+                    UpdateBitmap();
+            }
+        }
+
+        private bool _useThreshold;
+        public bool UseThreshold
+        {
+            get => _useThreshold;
+            set
+            {
+                if (Set(ref _useThreshold, value))
+                    UpdateBitmap();
+            }
+        }
+
+        private bool _useGsAfterTh;
+        public bool UseGsAfterTh
+        {
+            get => _useGsAfterTh;
+            set
+            {
+                if (Set(ref _useGsAfterTh, value))
+                    UpdateBitmap();
+            }
+        }
+
+        private byte _thValue;
+        public byte ThValue
+        {
+            get => _thValue;
+            set
+            {
+                if (Set(ref _thValue, value))
+                    UpdateBitmap();
+            }
+        }
+
+        private bool _useLPF;
+        public bool UseLPF
+        {
+            get => _useLPF;
+            set
+            {
+                if (Set(ref _useLPF, value))
+                    UpdateBitmap();
+            }
+        }
+
+        private byte _lpfValue;
+        public byte LPFValue
+        {
+            get => _lpfValue;
+            set
+            {
+                if (Set(ref _lpfValue, value))
+                    UpdateBitmap();
+            }
+        }
+
+        private bool _useHPF;
+        public bool UseHPF
+        {
+            get => _useHPF;
+            set
+            {
+                if (Set(ref _useHPF, value))
+                    UpdateBitmap();
+            }
+        }
+
+        private byte _hpfValue;
+        public byte HPFValue
+        {
+            get => _hpfValue;
+            set
+            {
+                if (Set(ref _hpfValue, value))
+                    UpdateBitmap();
+            }
+        }
+
+        private System.Windows.Media.ImageSource _snapshot;
+        public System.Windows.Media.ImageSource Snapshot
+        {
+            get => _snapshot;
+            set => Set(ref _snapshot, value);
         }
 
         public ICommand CaptureCommand { get; private set; }
@@ -123,16 +208,83 @@ namespace OCRTester.ViewModel
             }
         }
 
-        private System.Windows.Media.ImageSource ImageSourceFromBitmap(Bitmap bmp)
+        public ICommand ReadTextCommand { get; private set; }
+        public void ReadTextCommandMethod()
         {
-            var handle = bmp.GetHbitmap();
+            OCRResult = ReadBitmapText(_convertedBitmap);
+        }
+
+        private void UpdateBitmap()
+        {
+            if (_originalBitmap == null)
+                return;
+
+            _convertedBitmap = _originalBitmap.Clone() as Bitmap;
+
+            void applyFilter()
+            {
+                if (UseLPF)
+                    BitmapUtility.SetLPF(_convertedBitmap, LPFValue);
+
+                if (UseHPF)
+                    BitmapUtility.SetHPF(_convertedBitmap, HPFValue);
+
+                if (UseThreshold)
+                    BitmapUtility.SetThreshold(_convertedBitmap, ThValue);
+            }
+
+            if (UseGrayscale)
+            {
+                if (UseGsAfterTh)
+                    applyFilter();
+
+                BitmapUtility.ConvertToGrayscale(_convertedBitmap);
+
+                if (!UseGsAfterTh)
+                    applyFilter();
+            }
+            else
+            {
+                applyFilter();
+            }
+
+            Snapshot = BitmapUtility.ImageSourceFromBitmap(_convertedBitmap);
+        }
+
+        private string ReadBitmapText(Bitmap bitmap)
+        {
+            string ocrText = null;
+
             try
             {
-                return Imaging.CreateBitmapSourceFromHBitmap(
-                    handle, IntPtr.Zero, Int32Rect.Empty,
-                    System.Windows.Media.Imaging.BitmapSizeOptions.FromEmptyOptions());
+                byte[] pixArray = null;
+
+                using (var stream = new MemoryStream())
+                {
+                    bitmap.Save(stream, System.Drawing.Imaging.ImageFormat.Bmp);
+                    pixArray = stream.ToArray();
+                }
+
+                using (var engine = new TesseractEngine(@"./tessdata", "eng", EngineMode.Default))
+                {
+                    if (pixArray != null)
+                    {
+                        using (var img = Pix.LoadFromMemory(pixArray))
+                        {
+                            using (var page = engine.Process(img))
+                            {
+                                ocrText = page.GetText();
+                            }
+                        }
+                    }
+                }
             }
-            finally { DeleteObject(handle); }
+            catch (Exception e)
+            {
+                System.Windows.Forms.MessageBox.Show(e.ToString());
+            }
+
+            return ocrText;
         }
 
         public MainViewModel(IDataService dataService)
@@ -140,48 +292,33 @@ namespace OCRTester.ViewModel
             _dataService = dataService;
             _dataService.WinHandler.OnScreenCaptured += (sender, bm) =>
             {
-                string ocrText = null;
+                _originalBitmap = bm.Clone() as Bitmap;
+                _convertedBitmap = bm.Clone() as Bitmap;
 
-                try
-                {
-                    byte[] pixArray = null;
+                if (UseGrayscale && !UseGsAfterTh)
+                    BitmapUtility.ConvertToGrayscale(_convertedBitmap);
 
-                    using (var stream = new MemoryStream())
-                    {
-                        bm.Save(stream, System.Drawing.Imaging.ImageFormat.Bmp);
-                        pixArray = stream.ToArray();
-                    }
+                if (UseThreshold)
+                    BitmapUtility.SetThreshold(_convertedBitmap, ThValue);
 
-                    using (var engine = new TesseractEngine(@"./tessdata", "eng", EngineMode.Default))
-                    {
-                        if (pixArray != null)
-                        {
-                            using (var img = Pix.LoadFromMemory(pixArray))
-                            {
-                                using (var page = engine.Process(img))
-                                {
-                                    ocrText = page.GetText();
-                                }
-                            }
-                        }
-                    }
-                }
-                catch (Exception e)
-                {
-                    System.Windows.Forms.MessageBox.Show(e.ToString());
-                }
+                if (UseGrayscale && UseGsAfterTh)
+                    BitmapUtility.ConvertToGrayscale(_convertedBitmap);
 
-                Application.Current.Dispatcher.Invoke(() =>
-                {
-                    SnapShot = ImageSourceFromBitmap(bm);
+                Application.Current.Dispatcher.Invoke(
+                    () => Snapshot = BitmapUtility.ImageSourceFromBitmap(_convertedBitmap));
 
-                    if (!string.IsNullOrEmpty(ocrText))
-                        OCRResult = ocrText;
-                });
+                string ocrText = ReadBitmapText(_convertedBitmap);
+
+                if (!string.IsNullOrEmpty(ocrText))
+                    OCRResult = ocrText;
             };
 
             OCRResult = "OCR Tester";
+            ThValue = 128;
+            LPFValue = 255;
+            HPFValue = 0;
             CaptureCommand = new RelayCommand(CaptureCommandMethod);
+            ReadTextCommand = new RelayCommand(ReadTextCommandMethod);
 
             foreach (ConfigData cd in dataService.Config.LoadConfigData())
             {
