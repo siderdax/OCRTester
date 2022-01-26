@@ -49,7 +49,7 @@
             </Border>
         </DockPanel>
         <DockPanel Background="LightGray">
-            <Image Source="{Binding SnapShot}" />
+            <Image Source="{Binding SnapShot}" RenderOptions.BitmapScalingMode="NearestNeighbor" />
         </DockPanel>
     </DockPanel>
 </Window>

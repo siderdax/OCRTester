@@ -116,6 +116,9 @@ namespace OCRTester.ViewModel
                 Task.Run(() =>
                 {
                     _dataService.WinHandler.Run("capture.json", X, Y, Width, Height, WindowName);
+
+                    if (OCRResult.Equals("Capturing..."))
+                        OCRResult = string.Empty;
                 });
             }
         }
@@ -145,7 +148,7 @@ namespace OCRTester.ViewModel
 
                     using (var stream = new MemoryStream())
                     {
-                        bm.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
+                        bm.Save(stream, System.Drawing.Imaging.ImageFormat.Bmp);
                         pixArray = stream.ToArray();
                     }
 
