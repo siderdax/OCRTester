@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
@@ -214,41 +215,54 @@ namespace OCRTester.ViewModel
             OCRResult = ReadBitmapText(_convertedBitmap);
         }
 
+        private readonly object _updateLock = new object();
+        private Timer _updateTimer;
         private void UpdateBitmap()
         {
-            if (_originalBitmap == null)
-                return;
+            if (_updateTimer != null)
+                _updateTimer.Dispose();
 
-            _convertedBitmap = _originalBitmap.Clone() as Bitmap;
-
-            void applyFilter()
+            _updateTimer = new Timer((arg) =>
             {
-                if (UseLPF)
-                    BitmapUtility.SetLPF(_convertedBitmap, LPFValue);
+                lock (_updateLock)
+                {
+                    if (_originalBitmap == null)
+                        return;
 
-                if (UseHPF)
-                    BitmapUtility.SetHPF(_convertedBitmap, HPFValue);
+                    _convertedBitmap = _originalBitmap.Clone() as Bitmap;
 
-                if (UseThreshold)
-                    BitmapUtility.SetThreshold(_convertedBitmap, ThValue);
-            }
+                    void applyFilter()
+                    {
+                        if (UseLPF)
+                            BitmapUtility.SetLPF(_convertedBitmap, LPFValue);
 
-            if (UseGrayscale)
-            {
-                if (UseGsAfterTh)
-                    applyFilter();
+                        if (UseHPF)
+                            BitmapUtility.SetHPF(_convertedBitmap, HPFValue);
 
-                BitmapUtility.ConvertToGrayscale(_convertedBitmap);
+                        if (UseThreshold)
+                            BitmapUtility.SetThreshold(_convertedBitmap, ThValue);
+                    }
 
-                if (!UseGsAfterTh)
-                    applyFilter();
-            }
-            else
-            {
-                applyFilter();
-            }
+                    if (UseGrayscale)
+                    {
+                        if (UseGsAfterTh)
+                            applyFilter();
 
-            Snapshot = BitmapUtility.ImageSourceFromBitmap(_convertedBitmap);
+                        BitmapUtility.ConvertToGrayscale(_convertedBitmap);
+
+                        if (!UseGsAfterTh)
+                            applyFilter();
+                    }
+                    else
+                    {
+                        applyFilter();
+                    }
+
+                }
+
+                Application.Current.Dispatcher.Invoke(
+                    () => Snapshot = BitmapUtility.ImageSourceFromBitmap(_convertedBitmap));
+            }, null, 500, -1);
         }
 
         private string ReadBitmapText(Bitmap bitmap)
