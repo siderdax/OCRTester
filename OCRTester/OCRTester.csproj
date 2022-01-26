@@ -155,7 +155,7 @@
     <Error Condition="!Exists('..\packages\Tesseract.4.1.1\build\Tesseract.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Tesseract.4.1.1\build\Tesseract.targets'))" />
   </Target>
   <PropertyGroup>
-    <PreBuildEvent>xcopy "$(SolutionDir)OCRTester\\traineddata\\" "$(TargetDir)" /Y /E</PreBuildEvent>
+    <PreBuildEvent>xcopy "$(SolutionDir)OCRTester\\tess_files\\" "$(TargetDir)" /Y /E</PreBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
