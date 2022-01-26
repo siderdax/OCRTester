@@ -138,7 +138,15 @@ namespace OCRTester.ViewModel
             set
             {
                 if (Set(ref _thValue, value))
+                {
+                    if (LPFValue < value)
+                        LPFValue = value;
+
+                    if (HPFValue > value)
+                        HPFValue = value;
+
                     UpdateBitmap();
+                }
             }
         }
 
@@ -160,7 +168,15 @@ namespace OCRTester.ViewModel
             set
             {
                 if (Set(ref _lpfValue, value))
+                {
+                    if (ThValue > value)
+                        ThValue = value;
+
+                    if (HPFValue > value)
+                        HPFValue = value;
+
                     UpdateBitmap();
+                }
             }
         }
 
@@ -182,7 +198,15 @@ namespace OCRTester.ViewModel
             set
             {
                 if (Set(ref _hpfValue, value))
+                {
+                    if (ThValue < value)
+                        ThValue = value;
+
+                    if (HPFValue < value)
+                        HPFValue = value;
+
                     UpdateBitmap();
+                }
             }
         }
 
