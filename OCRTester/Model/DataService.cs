@@ -1,15 +1,15 @@
-﻿using System;
+﻿using System.Windows.Forms;
+using OCRTester.Model.Utility;
 
 namespace OCRTester.Model
 {
     public class DataService : IDataService
     {
-        public void GetData(Action<DataItem, Exception> callback)
-        {
-            // Use this to connect to the actual data service
+        public WindowHandler WinHandler { get; private set; }
 
-            var item = new DataItem("Welcome to MVVM Light");
-            callback(item, null);
+        public DataService()
+        {
+            WinHandler = new WindowHandler(Application.StartupPath + @"\Handler\");
         }
     }
 }

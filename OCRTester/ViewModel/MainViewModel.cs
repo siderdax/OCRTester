@@ -1,65 +1,110 @@
-﻿using GalaSoft.MvvmLight;
+﻿using System;
+using System.Drawing;
+using System.Runtime.InteropServices;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Input;
+using System.Windows.Interop;
+using GalaSoft.MvvmLight;
+using GalaSoft.MvvmLight.Command;
 using OCRTester.Model;
 
 namespace OCRTester.ViewModel
 {
-    /// <summary>
-    /// This class contains properties that the main View can data bind to.
-    /// <para>
-    /// See http://www.mvvmlight.net
-    /// </para>
-    /// </summary>
+
     public class MainViewModel : ViewModelBase
     {
+        [DllImport("gdi32.dll", EntryPoint = "DeleteObject")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool DeleteObject([In] IntPtr hObject);
+
         private readonly IDataService _dataService;
 
-        /// <summary>
-        /// The <see cref="WelcomeTitle" /> property's name.
-        /// </summary>
-        public const string WelcomeTitlePropertyName = "WelcomeTitle";
-
-        private string _welcomeTitle = string.Empty;
-
-        /// <summary>
-        /// Gets the WelcomeTitle property.
-        /// Changes to that property's value raise the PropertyChanged event. 
-        /// </summary>
-        public string WelcomeTitle
+        private int _x;
+        public int X
         {
-            get
+            get => _x;
+            set => Set(ref _x, value);
+        }
+
+        private int _y;
+        public int Y
+        {
+            get => _y;
+            set => Set(ref _y, value);
+        }
+
+        private int _width;
+        public int Width
+        {
+            get => _width;
+            set => Set(ref _width, value);
+        }
+
+        private int _height;
+        public int Height
+        {
+            get => _height;
+            set => Set(ref _height, value);
+        }
+
+        private string _windowName;
+        public string WindowName
+        {
+            get => _windowName;
+            set => Set(ref _windowName, value);
+        }
+
+        private string _ocrResult;
+        public string OCRResult
+        {
+            get => _ocrResult;
+            set => Set(ref _ocrResult, value);
+        }
+
+        private System.Windows.Media.ImageSource _snapShot;
+        public System.Windows.Media.ImageSource SnapShot
+        {
+            get => _snapShot;
+            set => Set(ref _snapShot, value);
+        }
+
+        public ICommand CaptureCommand { get; private set; }
+        public void CaptureCommandMethod()
+        {
+            if (!_dataService.WinHandler.IsRunning("capture.json"))
             {
-                return _welcomeTitle;
-            }
-            set
-            {
-                Set(ref _welcomeTitle, value);
+                OCRResult = "Capturing...";
+                Task.Run(() =>
+                {
+                    _dataService.WinHandler.Run("capture.json", X, Y, Width, Height, WindowName);
+                    OCRResult = "Captured";
+                });
             }
         }
 
-        /// <summary>
-        /// Initializes a new instance of the MainViewModel class.
-        /// </summary>
+        private System.Windows.Media.ImageSource ImageSourceFromBitmap(Bitmap bmp)
+        {
+            var handle = bmp.GetHbitmap();
+            try
+            {
+                return Imaging.CreateBitmapSourceFromHBitmap(
+                    handle, IntPtr.Zero, Int32Rect.Empty,
+                    System.Windows.Media.Imaging.BitmapSizeOptions.FromEmptyOptions());
+            }
+            finally { DeleteObject(handle); }
+        }
+
         public MainViewModel(IDataService dataService)
         {
             _dataService = dataService;
-            _dataService.GetData(
-                (item, error) =>
-                {
-                    if (error != null)
-                    {
-                        // Report error here
-                        return;
-                    }
+            _dataService.WinHandler.OnScreenCaptured += (sender, bm) =>
+                Application.Current.Dispatcher.Invoke(() => SnapShot = ImageSourceFromBitmap(bm));
 
-                    WelcomeTitle = item.Title;
-                });
+            Width = 320;
+            Height = 240;
+            OCRResult = "OCR Tester";
+            CaptureCommand = new RelayCommand(CaptureCommandMethod);
         }
-
-        ////public override void Cleanup()
-        ////{
-        ////    // Clean up if needed
-
-        ////    base.Cleanup();
-        ////}
     }
 }

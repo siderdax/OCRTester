@@ -5,9 +5,11 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:ignore="http://www.galasoft.ch/ignore"
         mc:Ignorable="d ignore"
-        Height="300"
-        Width="300"
-        Title="MVVM Light Application"
+        Height="450"
+        Width="800"
+        MinWidth="320"
+        MinHeight="450"
+        Title="OCR Tester"
         DataContext="{Binding Main, Source={StaticResource Locator}}">
     
     <Window.Resources>
@@ -18,15 +20,36 @@
         </ResourceDictionary>
     </Window.Resources>
 
-    <Grid x:Name="LayoutRoot">
-
-        <TextBlock FontSize="36"
-                   FontWeight="Bold"
-                   Foreground="Purple"
-                   Text="{Binding WelcomeTitle}"
-                   VerticalAlignment="Center"
-                   HorizontalAlignment="Center"
-                   TextWrapping="Wrap" />
-
-    </Grid>
+    <DockPanel>
+        <DockPanel DockPanel.Dock="Right">
+            <TextBlock DockPanel.Dock="Top" Text="OCR Result:" FontWeight="Bold" Margin="8" />
+            <DockPanel DockPanel.Dock="Bottom" Margin="8">
+                <Button DockPanel.Dock="Bottom" Content="Capture" Height="32" Command="{Binding CaptureCommand}" />
+                <StackPanel DockPanel.Dock="Bottom">
+                    <DockPanel Margin="0 0 0 8">
+                        <TextBlock DockPanel.Dock="Left" Text="Window name:" Width="88" TextAlignment="Right" />
+                        <TextBox Text="{Binding WindowName}" Margin="8 0 0 0" />
+                    </DockPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0 0 0 8">
+                        <TextBlock Text="X:" Width="88" TextAlignment="Right" />
+                        <TextBox Text="{Binding X}" Width="56" Margin="8 0 0 0" />
+                        <TextBlock Text="Y:" Width="48" TextAlignment="Right" Margin="8 0 0 0" />
+                        <TextBox Text="{Binding Y}" Width="56" Margin="8 0 0 0" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0 0 0 8">
+                        <TextBlock Text="Width:" Width="88" TextAlignment="Right" />
+                        <TextBox Text="{Binding Width}" Width="56" Margin="8 0 0 0" />
+                        <TextBlock Text="Height:" Width="48" TextAlignment="Right" Margin="8 0 0 0" />
+                        <TextBox Text="{Binding Height}" Width="56" Margin="8 0 0 0" />
+                    </StackPanel>
+                </StackPanel>
+            </DockPanel>
+            <Border BorderThickness="1" BorderBrush="Gray" Margin="4 0">
+                <TextBlock Text="{Binding OCRResult}"/>
+            </Border>
+        </DockPanel>
+        <DockPanel Background="LightGray">
+            <Image Source="{Binding SnapShot}" />
+        </DockPanel>
+    </DockPanel>
 </Window>
